@@ -35,7 +35,7 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willEnterBackground:) name:UIApplicationWillResignActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willEnterForeground:) name:UIApplicationDidBecomeActiveNotification object:nil];
 #ifdef DEBUG
-        enabledWriteVideoFile = NO;
+        enabledWriteVideoFile = YES;
         [self initForFilePath];
 #endif
         
@@ -105,18 +105,30 @@
 
     NSDictionary *properties = nil;
     if (frameCount % (int32_t)_configuration.videoMaxKeyframeInterval == 0) {
-        properties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @YES};
+        if (@available(iOS 8.0, *)) {
+            properties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @YES};
+        } else {
+            // Fallback on earlier versions
+        }
     }
     NSNumber *timeNumber = @(timeStamp);
 
-    OSStatus status = VTCompressionSessionEncodeFrame(compressionSession, pixelBuffer, presentationTimeStamp, duration, (__bridge CFDictionaryRef)properties, (__bridge_retained void *)timeNumber, &flags);
-    if(status != noErr){
-        [self resetCompressionSession];
+    if (@available(iOS 8.0, *)) {
+        OSStatus status = VTCompressionSessionEncodeFrame(compressionSession, pixelBuffer, presentationTimeStamp, duration, (__bridge CFDictionaryRef)properties, (__bridge_retained void *)timeNumber, &flags);
+        if(status != noErr){
+            [self resetCompressionSession];
+        }
+    } else {
+        // Fallback on earlier versions
     }
 }
 
 - (void)stopEncoder {
-    VTCompressionSessionCompleteFrames(compressionSession, kCMTimeIndefinite);
+    if (@available(iOS 8.0, *)) {
+        VTCompressionSessionCompleteFrames(compressionSession, kCMTimeIndefinite);
+    } else {
+        // Fallback on earlier versions
+    }
 }
 
 - (void)setDelegate:(id<LFVideoEncodingDelegate>)delegate {
@@ -149,7 +161,7 @@ static void VideoCompressonOutputCallback(void *VTref, void *VTFrameRef, OSStatu
         return;
     }
 
-    if (keyframe && !videoEncoder->sps) {
+    if (keyframe) {
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sampleBuffer);
 
         size_t sparameterSetSize, sparameterSetCount;

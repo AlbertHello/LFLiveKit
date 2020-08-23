@@ -78,7 +78,10 @@ SAVC(mp4a);
     return [self initWithStream:stream reconnectInterval:0 reconnectCount:0];
 }
 
-- (nullable instancetype)initWithStream:(nullable LFLiveStreamInfo *)stream reconnectInterval:(NSInteger)reconnectInterval reconnectCount:(NSInteger)reconnectCount{
+- (nullable instancetype)initWithStream:(nullable LFLiveStreamInfo *)stream
+                      reconnectInterval:(NSInteger)reconnectInterval
+                         reconnectCount:(NSInteger)reconnectCount{
+    
     if (!stream) @throw [NSException exceptionWithName:@"LFStreamRtmpSocket init error" reason:@"stream is nil" userInfo:nil];
     if (self = [super init]) {
         _stream = stream;
@@ -88,7 +91,11 @@ SAVC(mp4a);
         if (reconnectCount > 0) _reconnectCount = reconnectCount;
         else _reconnectCount = RetryTimesBreaken;
         
-        [self addObserver:self forKeyPath:@"isSending" options:NSKeyValueObservingOptionNew context:nil];//这里改成observer主要考虑一直到发送出错情况下，可以继续发送
+        //这里改成observer主要考虑一直到发送出错情况下，可以继续发送
+        [self addObserver:self
+               forKeyPath:@"isSending"
+                  options:NSKeyValueObservingOptionNew
+                  context:nil];
     }
     return self;
 }
@@ -179,6 +186,9 @@ SAVC(mp4a);
                     }
                     [_self sendVideoHeader:(LFVideoFrame *)frame];
                 } else {
+                    if (((LFVideoFrame*)frame).isKeyFrame) {
+                        [_self sendVideoHeader:(LFVideoFrame *)frame];
+                    }
                     [_self sendVideo:(LFVideoFrame *)frame];
                 }
             } else {
@@ -225,7 +235,7 @@ SAVC(mp4a);
             
             //修改发送状态
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                //< 这里只为了不循环调用sendFrame方法 调用栈是保证先出栈再进栈
+                ///< 这里只为了不循环调用sendFrame方法 调用栈是保证先出栈再进栈
                 _self.isSending = NO;
             });
             
@@ -317,8 +327,8 @@ Failed:
 
     *enc++ = AMF_OBJECT;
 
-    enc = AMF_EncodeNamedNumber(enc, pend, &av_duration, 0.0);
-    enc = AMF_EncodeNamedNumber(enc, pend, &av_fileSize, 0.0);
+//    enc = AMF_EncodeNamedNumber(enc, pend, &av_duration, 0.0);
+//    enc = AMF_EncodeNamedNumber(enc, pend, &av_fileSize, 0.0);
 
     // videosize
     enc = AMF_EncodeNamedNumber(enc, pend, &av_width, _stream.videoConfiguration.videoSize.width);

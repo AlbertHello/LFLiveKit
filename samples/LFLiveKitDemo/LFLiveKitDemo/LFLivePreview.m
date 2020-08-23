@@ -156,17 +156,17 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
 
 
         /***   默认分辨率368 ＊ 640  音频：44.1 iphone6以上48  双声道  方向竖屏 ***/
-        LFLiveVideoConfiguration *videoConfiguration = [LFLiveVideoConfiguration new];
-        videoConfiguration.videoSize = CGSizeMake(640, 360);
-        videoConfiguration.videoBitRate = 800*1024;
-        videoConfiguration.videoMaxBitRate = 1000*1024;
-        videoConfiguration.videoMinBitRate = 500*1024;
-        videoConfiguration.videoFrameRate = 24;
-        videoConfiguration.videoMaxKeyframeInterval = 48;
-        videoConfiguration.outputImageOrientation = UIInterfaceOrientationLandscapeLeft;
-        videoConfiguration.autorotate = NO;
-        videoConfiguration.sessionPreset = LFCaptureSessionPreset720x1280;
-        _session = [[LFLiveSession alloc] initWithAudioConfiguration:[LFLiveAudioConfiguration defaultConfiguration] videoConfiguration:videoConfiguration captureType:LFLiveCaptureDefaultMask];
+//        LFLiveVideoConfiguration *videoConfiguration = [LFLiveVideoConfiguration new];
+//        videoConfiguration.videoSize = CGSizeMake(640, 360);
+//        videoConfiguration.videoBitRate = 800*1024;
+//        videoConfiguration.videoMaxBitRate = 1000*1024;
+//        videoConfiguration.videoMinBitRate = 500*1024;
+//        videoConfiguration.videoFrameRate = 24;
+//        videoConfiguration.videoMaxKeyframeInterval = 48;
+//        videoConfiguration.outputImageOrientation = UIInterfaceOrientationLandscapeLeft;
+//        videoConfiguration.autorotate = NO;
+//        videoConfiguration.sessionPreset = LFCaptureSessionPreset720x1280;
+//        _session = [[LFLiveSession alloc] initWithAudioConfiguration:[LFLiveAudioConfiguration defaultConfiguration] videoConfiguration:videoConfiguration captureType:LFLiveCaptureDefaultMask];
 
         /**    自己定制单声道  */
         /*
@@ -210,7 +210,7 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
 
         /**    自己定制高质量音频128K 分辨率设置为720*1280 方向竖屏 */
 
-        /*
+        
            LFLiveAudioConfiguration *audioConfiguration = [LFLiveAudioConfiguration new];
            audioConfiguration.numberOfChannels = 2;
            audioConfiguration.audioBitrate = LFLiveAudioBitRate_128Kbps;
@@ -223,11 +223,12 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
            videoConfiguration.videoMinBitRate = 500*1024;
            videoConfiguration.videoFrameRate = 15;
            videoConfiguration.videoMaxKeyframeInterval = 30;
-           videoConfiguration.landscape = NO;
-           videoConfiguration.sessionPreset = LFCaptureSessionPreset360x640;
+//           videoConfiguration.landscape = NO;
+           videoConfiguration.sessionPreset = LFCaptureSessionPreset720x1280;
+        videoConfiguration.outputImageOrientation=UIInterfaceOrientationPortrait;
 
            _session = [[LFLiveSession alloc] initWithAudioConfiguration:audioConfiguration videoConfiguration:videoConfiguration];
-         */
+         
 
 
         /**    自己定制高质量音频128K 分辨率设置为720*1280 方向横屏  */
@@ -359,7 +360,7 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
             if (_self.startLiveButton.selected) {
                 [_self.startLiveButton setTitle:@"结束直播" forState:UIControlStateNormal];
                 LFLiveStreamInfo *stream = [LFLiveStreamInfo new];
-                stream.url = @"rtmp://live.hkstv.hk.lxdns.com:1935/live/stream153";
+                stream.url = @"rtmp://wlivepush.58cdn.com.cn/live/PBCl1292411157365174273?bizid=18059&txSecret=2f0d252f782847bbb650e98da599dfb3&txTime=5F3124CE";
                 [_self.session startLive:stream];
             } else {
                 [_self.startLiveButton setTitle:@"开始直播" forState:UIControlStateNormal];

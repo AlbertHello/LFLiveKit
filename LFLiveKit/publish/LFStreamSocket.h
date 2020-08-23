@@ -34,5 +34,7 @@
 - (void)setDelegate:(nullable id <LFStreamSocketDelegate>)delegate;
 @optional
 - (nullable instancetype)initWithStream:(nullable LFLiveStreamInfo *)stream;
-- (nullable instancetype)initWithStream:(nullable LFLiveStreamInfo *)stream reconnectInterval:(NSInteger)reconnectInterval reconnectCount:(NSInteger)reconnectCount;
+- (nullable instancetype)initWithStream:(nullable LFLiveStreamInfo *)stream
+                      reconnectInterval:(NSInteger)reconnectInterval
+                         reconnectCount:(NSInteger)reconnectCount;
 @end

@@ -141,7 +141,7 @@
 
 #pragma mark -- EncoderDelegate
 - (void)audioEncoder:(nullable id<LFAudioEncoding>)encoder audioFrame:(nullable LFAudioFrame *)frame {
-    //<上传  时间戳对齐
+    //上传时间戳对齐
     if (self.uploading){
         self.hasCaptureAudio = YES;
         if(self.AVAlignment) [self pushSendBuffer:frame];
@@ -149,7 +149,7 @@
 }
 
 - (void)videoEncoder:(nullable id<LFVideoEncoding>)encoder videoFrame:(nullable LFVideoFrame *)frame {
-    //<上传 时间戳对齐
+    //上传时间戳对齐
     if (self.uploading){
         if(frame.isKeyFrame && self.hasCaptureAudio) self.hasKeyFrameVideo = YES;
         if(self.AVAlignment) [self pushSendBuffer:frame];
@@ -258,7 +258,6 @@
 - (void)setSaveLocalVideo:(BOOL)saveLocalVideo{
     [self.videoCaptureSource setSaveLocalVideo:saveLocalVideo];
 }
-
 
 - (NSURL*)saveLocalVideoPath{
     return self.videoCaptureSource.saveLocalVideoPath;
@@ -386,7 +385,9 @@
 
 - (id<LFStreamSocket>)socket {
     if (!_socket) {
-        _socket = [[LFStreamRTMPSocket alloc] initWithStream:self.streamInfo reconnectInterval:self.reconnectInterval reconnectCount:self.reconnectCount];
+        _socket = [[LFStreamRTMPSocket alloc] initWithStream:self.streamInfo
+                                           reconnectInterval:self.reconnectInterval
+                                              reconnectCount:self.reconnectCount];
         [_socket setDelegate:self];
     }
     return _socket;

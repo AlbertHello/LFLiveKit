@@ -19,19 +19,19 @@
 
 
 typedef NS_ENUM(NSInteger,LFLiveCaptureType) {
-    LFLiveCaptureAudio,         //< capture only audio
-    LFLiveCaptureVideo,         //< capture onlt video
-    LFLiveInputAudio,           //< only audio (External input audio)
-    LFLiveInputVideo,           //< only video (External input video)
+    LFLiveCaptureAudio,         //capture only audio
+    LFLiveCaptureVideo,         //capture onlt video
+    LFLiveInputAudio,           //only audio (External input audio)
+    LFLiveInputVideo,           //only video (External input video)
 };
 
 
 ///< 用来控制采集类型（可以内部采集也可以外部传入等各种组合，支持单音频与单视频,外部输入适用于录屏，无人机等外设介入）
 typedef NS_ENUM(NSInteger,LFLiveCaptureTypeMask) {
-    LFLiveCaptureMaskAudio = (1 << LFLiveCaptureAudio),                                 ///< only inner capture audio (no video)
-    LFLiveCaptureMaskVideo = (1 << LFLiveCaptureVideo),                                 ///< only inner capture video (no audio)
-    LFLiveInputMaskAudio = (1 << LFLiveInputAudio),                                     ///< only outer input audio (no video)
-    LFLiveInputMaskVideo = (1 << LFLiveInputVideo),                                     ///< only outer input video (no audio)
+    LFLiveCaptureMaskAudio = (1 << LFLiveCaptureAudio), //0                                ///< only inner capture audio (no video)
+    LFLiveCaptureMaskVideo = (1 << LFLiveCaptureVideo),   //2                              ///< only inner capture video (no audio)
+    LFLiveInputMaskAudio = (1 << LFLiveInputAudio),     //4                                ///< only outer input audio (no video)
+    LFLiveInputMaskVideo = (1 << LFLiveInputVideo),    //6                                 ///< only outer input video (no audio)
     LFLiveCaptureMaskAll = (LFLiveCaptureMaskAudio | LFLiveCaptureMaskVideo),           ///< inner capture audio and video
     LFLiveInputMaskAll = (LFLiveInputMaskAudio | LFLiveInputMaskVideo),                 ///< outer input audio and video(method see pushVideo and pushAudio)
     LFLiveCaptureMaskAudioInputVideo = (LFLiveCaptureMaskAudio | LFLiveInputMaskVideo), ///< inner capture audio and outer input video(method pushVideo and setRunning)

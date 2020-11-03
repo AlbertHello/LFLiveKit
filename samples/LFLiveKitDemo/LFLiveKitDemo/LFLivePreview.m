@@ -40,6 +40,7 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
 @property (nonatomic, strong) LFLiveDebug *debugInfo;
 @property (nonatomic, strong) LFLiveSession *session;
 @property (nonatomic, strong) UILabel *stateLabel;
+@property (nonatomic, strong) UILabel *speedLabel;
 
 @end
 
@@ -56,6 +57,7 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
         [self.containerView addSubview:self.cameraButton];
         [self.containerView addSubview:self.beautyButton];
         [self.containerView addSubview:self.startLiveButton];
+        [self.containerView addSubview:self.speedLabel];
     }
     return self;
 }
@@ -115,36 +117,59 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
 #pragma mark -- LFStreamingSessionDelegate
 /** live status changed will callback */
 - (void)liveSession:(nullable LFLiveSession *)session liveStateDidChange:(LFLiveState)state {
-    NSLog(@"liveStateDidChange: %ld", state);
     switch (state) {
-    case LFLiveReady:
-        _stateLabel.text = @"未连接";
-        break;
-    case LFLivePending:
-        _stateLabel.text = @"连接中";
-        break;
-    case LFLiveStart:
-        _stateLabel.text = @"已连接";
-        break;
-    case LFLiveError:
-        _stateLabel.text = @"连接错误";
-        break;
-    case LFLiveStop:
-        _stateLabel.text = @"未连接";
-        break;
-    default:
-        break;
+        case LFLiveReady:
+            NSLog(@"state: 未连接");
+            _stateLabel.text = @"未连接";
+            break;
+        case LFLivePending:
+            NSLog(@"state: 连接中");
+            _stateLabel.text = @"连接中";
+            break;
+        case LFLiveStart:
+            NSLog(@"state: 已连接");
+            _stateLabel.text = @"已连接";
+            break;
+        case LFLiveError:
+            NSLog(@"state: 连接错误");
+            _stateLabel.text = @"连接错误";
+            break;
+        case LFLiveStop:
+            NSLog(@"state: 未连接");
+            _stateLabel.text = @"未连接";
+            break;
+        default:
+            break;
     }
 }
 
 /** live debug info callback */
 - (void)liveSession:(nullable LFLiveSession *)session debugInfo:(nullable LFLiveDebug *)debugInfo {
     NSLog(@"debugInfo uploadSpeed: %@", formatedSpeed(debugInfo.currentBandwidth, debugInfo.elapsedMilli));
+    self.speedLabel.text=formatedSpeed(debugInfo.currentBandwidth, debugInfo.elapsedMilli);
 }
 
 /** callback socket errorcode */
 - (void)liveSession:(nullable LFLiveSession *)session errorCode:(LFLiveSocketErrorCode)errorCode {
-    NSLog(@"errorCode: %ld", errorCode);
+    switch (errorCode) {
+        case LFLiveSocketError_PreView:
+            NSLog(@"预览失败");
+            break;
+        case LFLiveSocketError_GetStreamInfo:
+            NSLog(@"获取流媒体信息失败失败");
+            break;
+        case LFLiveSocketError_ConnectSocket:
+            NSLog(@"连接socket失败");
+            break;
+        case LFLiveSocketError_Verification:
+            NSLog(@"验证服务器失败");
+            break;
+        case LFLiveSocketError_ReConnectTimeOut:
+            NSLog(@"重新连接服务器超时");
+            break;
+        default:
+            break;
+    }
 }
 
 #pragma mark -- Getter Setter
@@ -217,14 +242,14 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
            audioConfiguration.audioSampleRate = LFLiveAudioSampleRate_44100Hz;
 
            LFLiveVideoConfiguration *videoConfiguration = [LFLiveVideoConfiguration new];
-           videoConfiguration.videoSize = CGSizeMake(720, 1280);
-           videoConfiguration.videoBitRate = 800*1024;
-           videoConfiguration.videoMaxBitRate = 1000*1024;
+           videoConfiguration.videoSize = CGSizeMake(540, 960);
+           videoConfiguration.videoBitRate = 1500*1024;
+           videoConfiguration.videoMaxBitRate = 2000*1024;
            videoConfiguration.videoMinBitRate = 500*1024;
-           videoConfiguration.videoFrameRate = 15;
-           videoConfiguration.videoMaxKeyframeInterval = 30;
+           videoConfiguration.videoFrameRate = 20;
+           videoConfiguration.videoMaxKeyframeInterval = videoConfiguration.videoFrameRate * 2;
 //           videoConfiguration.landscape = NO;
-           videoConfiguration.sessionPreset = LFCaptureSessionPreset720x1280;
+           videoConfiguration.sessionPreset = LFCaptureSessionPreset540x960;
         videoConfiguration.outputImageOrientation=UIInterfaceOrientationPortrait;
 
            _session = [[LFLiveSession alloc] initWithAudioConfiguration:audioConfiguration videoConfiguration:videoConfiguration];
@@ -253,7 +278,7 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
         */
 
         _session.delegate = self;
-        _session.showDebugInfo = NO;
+        _session.showDebugInfo = YES;
         _session.preView = self;
         
         /*本地存储*/
@@ -292,6 +317,16 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
         _stateLabel.font = [UIFont boldSystemFontOfSize:14.f];
     }
     return _stateLabel;
+}
+
+- (UILabel *)speedLabel {
+    if (!_speedLabel) {
+        _speedLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 100, 80, 40)];
+        _speedLabel.text = @"0";
+        _speedLabel.textColor = [UIColor whiteColor];
+        _speedLabel.font = [UIFont boldSystemFontOfSize:14.f];
+    }
+    return _speedLabel;
 }
 
 - (UIButton *)closeButton {
@@ -360,7 +395,7 @@ inline static NSString *formatedSpeed(float bytes, float elapsed_milli) {
             if (_self.startLiveButton.selected) {
                 [_self.startLiveButton setTitle:@"结束直播" forState:UIControlStateNormal];
                 LFLiveStreamInfo *stream = [LFLiveStreamInfo new];
-                stream.url = @"rtmp://wlivepush.58cdn.com.cn/live/PBCl1292411157365174273?bizid=18059&txSecret=2f0d252f782847bbb650e98da599dfb3&txTime=5F3124CE";
+                stream.url = @"rtmp://wlivepush.58cdn.com.cn/live/m55M1323547711760244736?bizid=18059&txSecret=e4ba56a242dde8201bf6c240b4985f80&txTime=5FA26AFB";
                 [_self.session startLive:stream];
             } else {
                 [_self.startLiveButton setTitle:@"开始直播" forState:UIControlStateNormal];

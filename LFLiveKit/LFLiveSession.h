@@ -29,11 +29,11 @@ typedef NS_ENUM(NSInteger,LFLiveCaptureType) {
 ///< 用来控制采集类型（可以内部采集也可以外部传入等各种组合，支持单音频与单视频,外部输入适用于录屏，无人机等外设介入）
 typedef NS_ENUM(NSInteger,LFLiveCaptureTypeMask) {
     LFLiveCaptureMaskAudio = (1 << LFLiveCaptureAudio), //0                                ///< only inner capture audio (no video)
-    LFLiveCaptureMaskVideo = (1 << LFLiveCaptureVideo),   //2                              ///< only inner capture video (no audio)
-    LFLiveInputMaskAudio = (1 << LFLiveInputAudio),     //4                                ///< only outer input audio (no video)
-    LFLiveInputMaskVideo = (1 << LFLiveInputVideo),    //6                                 ///< only outer input video (no audio)
-    LFLiveCaptureMaskAll = (LFLiveCaptureMaskAudio | LFLiveCaptureMaskVideo),           ///< inner capture audio and video
-    LFLiveInputMaskAll = (LFLiveInputMaskAudio | LFLiveInputMaskVideo),                 ///< outer input audio and video(method see pushVideo and pushAudio)
+    LFLiveCaptureMaskVideo = (1 << LFLiveCaptureVideo),   //1                              ///< only inner capture video (no audio)
+    LFLiveInputMaskAudio = (1 << LFLiveInputAudio),     //2                                ///< only outer input audio (no video)
+    LFLiveInputMaskVideo = (1 << LFLiveInputVideo),    //3                                 ///< only outer input video (no audio) 
+    LFLiveCaptureMaskAll = (LFLiveCaptureMaskAudio | LFLiveCaptureMaskVideo),  //1    ///< inner capture audio and video
+    LFLiveInputMaskAll = (LFLiveInputMaskAudio | LFLiveInputMaskVideo),  //  3     ///< outer input audio and video(method see pushVideo and pushAudio)
     LFLiveCaptureMaskAudioInputVideo = (LFLiveCaptureMaskAudio | LFLiveInputMaskVideo), ///< inner capture audio and outer input video(method pushVideo and setRunning)
     LFLiveCaptureMaskVideoInputAudio = (LFLiveCaptureMaskVideo | LFLiveInputMaskAudio), ///< inner capture video and outer input audio(method pushAudio and setRunning)
     LFLiveCaptureDefaultMask = LFLiveCaptureMaskAll                                     ///< default is inner capture audio and video

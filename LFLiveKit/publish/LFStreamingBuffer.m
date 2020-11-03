@@ -24,6 +24,7 @@ static const NSUInteger defaultSendBufferMaxCount = 600;///< 最大缓冲区为6
 
 /** 处理buffer缓冲区情况 */
 @property (nonatomic, assign) NSInteger currentInterval;
+@property (nonatomic, assign) NSInteger tickTimes;
 @property (nonatomic, assign) NSInteger callBackInterval;
 @property (nonatomic, assign) NSInteger updateInterval;
 @property (nonatomic, assign) BOOL startTimer;
@@ -41,6 +42,8 @@ static const NSUInteger defaultSendBufferMaxCount = 600;///< 最大缓冲区为6
         self.maxCount = defaultSendBufferMaxCount;
         self.lastDropFrames = 0;
         self.startTimer = NO;
+        self.tickTimes=0;
+        
     }
     return self;
 }
@@ -87,11 +90,15 @@ static const NSUInteger defaultSendBufferMaxCount = 600;///< 最大缓冲区为6
 }
 
 - (void)removeExpireFrame {
-    if (self.list.count < self.maxCount) return;
+    if (self.list.count < self.maxCount){
+//        NSLog(@"list.count < 600, no need drop frame");
+        return;
+    }
 
     NSArray *pFrames = [self expirePFrames];///< 第一个P到第一个I之间的p帧
     self.lastDropFrames += [pFrames count];
     if (pFrames && pFrames.count > 0) {
+        NSLog(@"Drop frame: 删除list最前面的p帧，count：%d",(int)pFrames.count);
         [self.list removeObjectsInArray:pFrames];
         return;
     }
@@ -99,10 +106,11 @@ static const NSUInteger defaultSendBufferMaxCount = 600;///< 最大缓冲区为6
     NSArray *iFrames = [self expireIFrames];///<  删除一个I帧（但一个I帧可能对应多个nal）
     self.lastDropFrames += [iFrames count];
     if (iFrames && iFrames.count > 0) {
+        NSLog(@"Drop frame: 删除list最前面的一个I帧，count：%d",(int)iFrames.count);
         [self.list removeObjectsInArray:iFrames];
         return;
     }
-    
+    NSLog(@"清空发送队列list count: %d",(int)self.list.count);
     [self.list removeAllObjects];
 }
 
@@ -152,23 +160,29 @@ NSInteger frameDataCompare(id obj1, id obj2, void *context){
     NSInteger increaseCount = 0;
     NSInteger decreaseCount = 0;
 
+//    NSLog(@"self.thresholdList: %@",self.thresholdList);
     for (NSNumber *number in self.thresholdList) {
+//        NSLog(@"number.integerValue: %d, currentCount: %d",number.integerValue,currentCount);
         if (number.integerValue > currentCount) {
             increaseCount++;
+//            NSLog(@"increaseCount: %d",increaseCount);
         } else{
             decreaseCount++;
+//            NSLog(@"decreaseCount: %d",decreaseCount);
         }
         currentCount = [number integerValue];
     }
-
+//    NSLog(@"callBackInterval: %d",self.callBackInterval);
     if (increaseCount >= self.callBackInterval) {
+//        NSLog(@"increaseCount >= callBackInterval -> Increase");
         return LFLiveBuffferIncrease;
     }
 
     if (decreaseCount >= self.callBackInterval) {
+//        NSLog(@"decreaseCount >= callBackInterval -> Decline");
         return LFLiveBuffferDecline;
     }
-    
+//    NSLog(@"LFLiveBuffferUnknown");
     return LFLiveBuffferUnknown;
 }
 
@@ -196,20 +210,24 @@ NSInteger frameDataCompare(id obj1, id obj2, void *context){
 
 #pragma mark -- 采样
 - (void)tick {
+    NSLog(@"tick times: %ld",(long)self.tickTimes++);
     /** 采样 3个阶段   如果网络都是好或者都是差给回调 */
     _currentInterval += self.updateInterval;
-
+//    NSLog(@"_currentInterval: %ld",(long)_currentInterval);
     dispatch_semaphore_wait(_lock, DISPATCH_TIME_FOREVER);
+    NSLog(@"self.list.count: %lu",(unsigned long)self.list.count);
     [self.thresholdList addObject:@(self.list.count)];
     dispatch_semaphore_signal(_lock);
     
     if (self.currentInterval >= self.callBackInterval) {
         LFLiveBuffferState state = [self currentBufferState];
         if (state == LFLiveBuffferIncrease) {
+//            NSLog(@"state = AlLiveBuffferIncrease");
             if (self.delegate && [self.delegate respondsToSelector:@selector(streamingBuffer:bufferState:)]) {
                 [self.delegate streamingBuffer:self bufferState:LFLiveBuffferIncrease];
             }
         } else if (state == LFLiveBuffferDecline) {
+//            NSLog(@"state = LFLiveBuffferDecline");
             if (self.delegate && [self.delegate respondsToSelector:@selector(streamingBuffer:bufferState:)]) {
                 [self.delegate streamingBuffer:self bufferState:LFLiveBuffferDecline];
             }

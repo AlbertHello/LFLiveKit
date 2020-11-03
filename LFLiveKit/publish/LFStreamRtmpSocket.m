@@ -174,51 +174,57 @@ SAVC(mp4a);
                 _self.isSending = NO;
                 return;
             }
-
             // 调用发送接口
             LFFrame *frame = [_self.buffer popFirstObject];
             if ([frame isKindOfClass:[LFVideoFrame class]]) {
-                if (!_self.sendVideoHead) {
-                    _self.sendVideoHead = YES;
+                if (!_self.sendVideoHead) {//是否发送过video header
                     if(!((LFVideoFrame*)frame).sps || !((LFVideoFrame*)frame).pps){
+                        //没有sps pps 信息不需要发送，直接返回
                         _self.isSending = NO;
                         return;
                     }
+                    _self.sendVideoHead = YES;
+                    //先发送spspps帧
                     [_self sendVideoHeader:(LFVideoFrame *)frame];
                 } else {
                     if (((LFVideoFrame*)frame).isKeyFrame) {
+                        //如果是关键帧再次发送一次header
                         [_self sendVideoHeader:(LFVideoFrame *)frame];
                     }
                     [_self sendVideo:(LFVideoFrame *)frame];
                 }
             } else {
                 if (!_self.sendAudioHead) {
-                    _self.sendAudioHead = YES;
                     if(!((LFAudioFrame*)frame).audioInfo){
                         _self.isSending = NO;
                         return;
                     }
+                    _self.sendAudioHead = YES;
                     [_self sendAudioHeader:(LFAudioFrame *)frame];
                 } else {
                     [_self sendAudio:frame];
                 }
             }
-
-            //debug更新
+            //总帧数
             _self.debugInfo.totalFrame++;
+            //记录总丢帧数
             _self.debugInfo.dropFrame += _self.buffer.lastDropFrames;
             _self.buffer.lastDropFrames = 0;
-
+            //总流量
             _self.debugInfo.dataFlow += frame.data.length;
+            //距离上次统计的时间 单位ms
             _self.debugInfo.elapsedMilli = CACurrentMediaTime() * 1000 - _self.debugInfo.timeStamp;
             if (_self.debugInfo.elapsedMilli < 1000) {
+                //1s内总带宽
                 _self.debugInfo.bandwidth += frame.data.length;
                 if ([frame isKindOfClass:[LFAudioFrame class]]) {
+                    //音频帧数统计
                     _self.debugInfo.capturedAudioCount++;
                 } else {
+                    //视频帧数统计
                     _self.debugInfo.capturedVideoCount++;
                 }
-
+                //当前缓冲区等待发送的帧数
                 _self.debugInfo.unSendCount = _self.buffer.list.count;
             } else {
                 _self.debugInfo.currentBandwidth = _self.debugInfo.bandwidth;
@@ -232,13 +238,11 @@ SAVC(mp4a);
                 _self.debugInfo.capturedVideoCount = 0;
                 _self.debugInfo.timeStamp = CACurrentMediaTime() * 1000;
             }
-            
             //修改发送状态
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 ///< 这里只为了不循环调用sendFrame方法 调用栈是保证先出栈再进栈
                 _self.isSending = NO;
             });
-            
         }
     });
 }
@@ -542,6 +546,7 @@ Failed:
 
 #pragma mark -- CallBack
 void RTMPErrorCallback(RTMPError *error, void *userData) {
+    
     LFStreamRTMPSocket *socket = (__bridge LFStreamRTMPSocket *)userData;
     if (error->code < 0) {
         [socket reconnect];
@@ -549,6 +554,7 @@ void RTMPErrorCallback(RTMPError *error, void *userData) {
 }
 
 void ConnectionTimeCallback(PILI_CONNECTION_TIME *conn_time, void *userData) {
+    printf("conect time: %d, handshake time: %u\n",conn_time->connect_time,conn_time->handshake_time);
 }
 
 #pragma mark -- LFStreamingBufferDelegate
@@ -560,6 +566,7 @@ void ConnectionTimeCallback(PILI_CONNECTION_TIME *conn_time, void *userData) {
 
 #pragma mark -- Observer
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context{
+    //KVO 监听isSending属性的改变，一旦设置为NO后随即再次开始sendFrame
     if([keyPath isEqualToString:@"isSending"]){
         if(!self.isSending){
             [self sendFrame];
@@ -587,6 +594,7 @@ void ConnectionTimeCallback(PILI_CONNECTION_TIME *conn_time, void *userData) {
 
 - (dispatch_queue_t)rtmpSendQueue{
     if(!_rtmpSendQueue){
+        //串行队列
         _rtmpSendQueue = dispatch_queue_create("com.youku.LaiFeng.RtmpSendQueue", NULL);
     }
     return _rtmpSendQueue;

@@ -55,7 +55,7 @@ static void rtmp_log_default(int level, const char *format, va_list vl) {
 
     if (!fmsg) fmsg = stderr;
 
-    if (level <= RTMP_debuglevel) {
+    if (level <= RTMP_LOGINFO) {
         if (neednl) {
             putc('\n', fmsg);
             neednl = 0;

@@ -132,6 +132,7 @@
 
 #pragma mark -- CaptureDelegate
 - (void)captureOutput:(nullable LFAudioCapture *)capture audioData:(nullable NSData*)audioData {
+//    NSLog(@"audiodata size: %lu",(unsigned long)audioData.length);
     if (self.uploading) [self.audioEncoder encodeAudioData:audioData timeStamp:NOW];
 }
 
@@ -197,22 +198,29 @@
 }
 
 - (void)socketBufferStatus:(nullable id<LFStreamSocket>)socket status:(LFLiveBuffferState)status {
-    if((self.captureType & LFLiveCaptureMaskVideo || self.captureType & LFLiveInputMaskVideo) && self.adaptiveBitrate){
+//    if((self.captureType & LFLiveCaptureMaskVideo || self.captureType & LFLiveInputMaskVideo) && self.adaptiveBitrate){
+        
         NSUInteger videoBitRate = [self.videoEncoder videoBitRate];
         if (status == LFLiveBuffferDecline) {
             if (videoBitRate < _videoConfiguration.videoMaxBitRate) {
+                NSLog(@"增加编码码率old: %lu", (unsigned long)videoBitRate);
                 videoBitRate = videoBitRate + 50 * 1000;
                 [self.videoEncoder setVideoBitRate:videoBitRate];
-                NSLog(@"Increase bitrate %@", @(videoBitRate));
+                NSLog(@"增加编码码率new: %lu", (unsigned long)videoBitRate);
+            }else{
+                NSLog(@"码率已经增加到最大值： %lu",(unsigned long)videoBitRate);
             }
         } else {
             if (videoBitRate > self.videoConfiguration.videoMinBitRate) {
+                NSLog(@"降低编码码率old: %lu", (unsigned long)videoBitRate);
                 videoBitRate = videoBitRate - 100 * 1000;
                 [self.videoEncoder setVideoBitRate:videoBitRate];
-                NSLog(@"Decline bitrate %@", @(videoBitRate));
+                NSLog(@"降低编码码率new: %lu", (unsigned long)videoBitRate);
+            }else{
+                NSLog(@"码率已经减小到最小值： %lu",(unsigned long)videoBitRate);
             }
         }
-    }
+//    }
 }
 
 #pragma mark -- Getter Setter
